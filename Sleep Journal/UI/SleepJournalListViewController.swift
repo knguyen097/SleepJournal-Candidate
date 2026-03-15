@@ -98,20 +98,25 @@ final class SleepJournalListViewController: UITableViewController {
 
         var config = UIListContentConfiguration.subtitleCell()
         let tagsText = entry.tags.isEmpty ? "No tags" : entry.tags.map { "\($0.emoji)" }.joined(separator: " ")
-        config.text = "\(entry.sleepQuality.emoji) \(entry.mood.emoji) \(entry.sleepHours.formatted())h • \(tagsText)"
+
+        config.text = "Sleep Quality: \(entry.sleepQuality.emoji)"
+
+        let moodLine = "Mood: \(entry.mood.emoji) • \(entry.sleepHours.formatted())h • \(tagsText)"
 
         let dateText = dateFormatter.string(from: entry.createdAt)
         if let weather = entry.weather {
-            config.secondaryText = "\(dateText) • \(weather.summary) \(weather.temperatureF.map { "\($0)°F" } ?? "")"
+            config.secondaryText = "\(moodLine)\n\(dateText) • \(weather.summary) \(weather.temperatureF.map { "\($0)°F" } ?? "")"
         } else {
-            config.secondaryText = "\(dateText) • No weather attached"
+            config.secondaryText = "\(moodLine)\n\(dateText) • No weather attached"
         }
+
         config.secondaryTextProperties.color = .secondaryLabel
+        config.secondaryTextProperties.numberOfLines = 2
+
         cell.contentConfiguration = config
         cell.accessoryType = .disclosureIndicator
         return cell
     }
-
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         guard let entry = viewModel.entry(at: indexPath) else {
