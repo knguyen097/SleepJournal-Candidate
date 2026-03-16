@@ -134,12 +134,22 @@ final class SleepJournalListViewController: UITableViewController {
     }
 
     @objc private func addEntryTapped() {
-        let formView = SleepEntryFormView { [weak self] entry in
-            self?.viewModel.addEntry(entry)
-            self?.tableView.reloadData()
-        }
+        var presentedNavController: UINavigationController?
+        
+        let formView = SleepEntryFormView(
+            onSave: { [weak self] entry in
+                self?.viewModel.addEntry(entry)
+                self?.tableView.reloadData()
+                presentedNavController?.dismiss(animated: true)
+            },
+            onCancel: {
+                presentedNavController?.dismiss(animated: true)
+            }
+        )
+        
         let hostingController = UIHostingController(rootView: formView)
         let navigationController = UINavigationController(rootViewController: hostingController)
+        presentedNavController = navigationController
         present(navigationController, animated: true)
     }
 

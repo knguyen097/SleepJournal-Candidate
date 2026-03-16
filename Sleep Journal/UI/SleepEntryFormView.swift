@@ -3,6 +3,7 @@ import SwiftUI
 
 struct SleepEntryFormView: View {
     let onSave: (SleepEntry) -> Void
+    let onCancel: () -> Void
 
     @Environment(\.dismiss) private var dismiss
 
@@ -158,7 +159,7 @@ struct SleepEntryFormView: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button("Cancel") {
-                    dismiss()
+                    onCancel()
                 }
             }
 
@@ -186,7 +187,7 @@ struct SleepEntryFormView: View {
             weather: weather
         )
         onSave(entry)
-        dismiss()
+        onCancel()
     }
 
     private func loadWeather() async {
