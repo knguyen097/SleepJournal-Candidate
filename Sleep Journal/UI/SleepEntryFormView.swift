@@ -1,5 +1,6 @@
 import CoreLocation
 import SwiftUI
+import MapKit
 
 struct SleepEntryFormView: View {
     let onSave: (SleepEntry) -> Void
@@ -18,6 +19,11 @@ struct SleepEntryFormView: View {
     @State private var cachedWeather: WeatherSnapshot?
     @State private var isLoadingWeather = false
     @State private var weatherError: String?
+    
+    @State private var attachLocation = false
+    @State private var entryLocation: EntryLocation?
+    @State private var locationError: String?
+    @State private var isLoadingLocation = false
 
     private let locationProvider = DeviceLocationProvider()
     private let weatherClient = WeatherClient()
@@ -83,6 +89,36 @@ struct SleepEntryFormView: View {
                 Section("Notes") {
                     TextEditor(text: $notes)
                         .frame(minHeight: 120)
+                }
+                
+                Section("Location") {
+                    Toggle("Attach Current Location", isOn: $attachLocation)
+                        .onChange(of: attachLocation) { _, isOn in
+                            if isOn {
+                                Task {
+                                    await loadEntryLocation()
+                                }
+                            } else {
+                                entryLocation = nil
+                                locationError = nil
+                            }
+                        }
+
+                    if isLoadingLocation {
+                        HStack {
+                            Text("Getting current location...")
+                            Spacer()
+                            ProgressView()
+                        }
+                    }
+
+                    if let entryLocation {
+                        Text("\(entryLocation.name)")
+                            .foregroundStyle(.secondary)
+                    } else if let locationError {
+                        Text(locationError)
+                            .foregroundStyle(.red)
+                    }
                 }
 
                 Section("Weather Context") {
@@ -186,9 +222,64 @@ struct SleepEntryFormView: View {
             mood: mood,
             tags: sortedTags,
             notes: notes,
-            weather: weather
+            weather: weather,
+            location: attachLocation ? entryLocation : nil
         )
         onSave(entry)
+    }
+    
+    private func loadEntryLocation() async {
+        isLoadingLocation = true
+        locationError = nil
+        defer { isLoadingLocation = false }
+
+        guard let coordinate = await locationProvider.requestSingleLocation() else {
+            entryLocation = nil
+            locationError = "Unable to get current location."
+            return
+        }
+
+        let location = CLLocation(
+            latitude: coordinate.latitude,
+            longitude: coordinate.longitude
+        )
+
+        if let request = MKReverseGeocodingRequest(location: location) {
+            do {
+                let mapItems = try await request.mapItems
+
+                if let item = mapItems.first {
+                    let name =
+                        item.address?.shortAddress ??
+                        item.address?.fullAddress ??
+                        "Unknown Location"
+
+                    entryLocation = EntryLocation(
+                        name: name,
+                        latitude: coordinate.latitude,
+                        longitude: coordinate.longitude
+                    )
+                } else {
+                    entryLocation = EntryLocation(
+                        name: "Unknown Location",
+                        latitude: coordinate.latitude,
+                        longitude: coordinate.longitude
+                    )
+                }
+            } catch {
+                entryLocation = EntryLocation(
+                    name: "Unknown Location",
+                    latitude: coordinate.latitude,
+                    longitude: coordinate.longitude
+                )
+            }
+        } else {
+            entryLocation = EntryLocation(
+                name: "Unknown Location",
+                latitude: coordinate.latitude,
+                longitude: coordinate.longitude
+            )
+        }
     }
 
     private func loadWeather() async {

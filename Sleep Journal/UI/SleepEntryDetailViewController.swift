@@ -50,6 +50,12 @@ final class SleepEntryDetailViewController: UIViewController {
         let tagsText = entry.tags.isEmpty ? "No tags" : entry.tags.map { "\($0.emoji) \($0.label)" }.joined(separator: ", ")
         stack.addArrangedSubview(makeLabel(text: "Tags: \(tagsText)", style: .body))
 
+        if let location = entry.location {
+            stack.addArrangedSubview(makeLabel(text: "Location: \(location.name)", style: .body))
+        } else {
+            stack.addArrangedSubview(makeLabel(text: "Location: None", style: .body))
+        }
+        
         if let weather = entry.weather {
             stack.addArrangedSubview(makeLabel(text: "Weather: \(weather.summary)", style: .headline))
             stack.addArrangedSubview(makeLabel(text: "Temperature: \(weather.temperatureF.map { "\($0)°F" } ?? "Unknown")", style: .body))

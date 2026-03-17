@@ -9,6 +9,7 @@ struct SleepEntry: Codable, Identifiable, Equatable {
     var tags: [SleepTag]
     var notes: String
     var weather: WeatherSnapshot?
+    var location: EntryLocation?
 
     var searchBlob: String {
         let qualityTokens = [
@@ -142,6 +143,12 @@ struct WeatherSnapshot: Codable, Equatable {
     var temperatureF: Int?
     var wind: String?
     var fetchedAt: Date
+}
+
+struct EntryLocation: Codable, Equatable {
+    var name: String
+    var latitude: Double
+    var longitude: Double
 }
 
 extension SleepEntry {
