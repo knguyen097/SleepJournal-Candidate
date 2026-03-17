@@ -63,11 +63,20 @@ final class SleepSettingsViewController: UITableViewController {
     }
 
     private func exportJSON() {
-        let data = JournalStore.shared.exportEntriesData()!
+        guard let data = JournalStore.shared.exportEntriesData() else {
+            presentAlert(title: "Export failed", message: "Could not prepare journal data.")
+            return
+        }
+        
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("sleep-journal-export.json")
-        try! data.write(to: tempURL, options: .atomic)
-        let activity = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
-        present(activity, animated: true)
+        
+        do {
+            try data.write(to: tempURL, options: .atomic)
+            let activity = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
+            present(activity, animated: true)
+        } catch {
+            presentAlert(title: "Export failed", message: "Could not write to export file.")
+        }
     }
 
     private func resetData() {

@@ -27,7 +27,9 @@ final class WeatherClient {
         let forecastRequest = request(for: forecastURL)
         let forecastData = try await data(for: forecastRequest)
         let forecastResponse = try decoder.decode(ForecastResponse.self, from: forecastData)
-        let period = forecastResponse.properties.periods.first!
+        guard let period = forecastResponse.properties.periods.first else {
+            throw WeatherClientError.emptyForecast
+        }
 
         return WeatherSnapshot(
             summary: period.shortForecast,

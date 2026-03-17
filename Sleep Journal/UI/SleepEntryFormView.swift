@@ -189,7 +189,6 @@ struct SleepEntryFormView: View {
             weather: weather
         )
         onSave(entry)
-        onCancel()
     }
 
     private func loadWeather() async {
