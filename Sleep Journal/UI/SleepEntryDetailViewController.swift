@@ -24,11 +24,25 @@ final class SleepEntryDetailViewController: UIViewController {
         view.backgroundColor = .systemBackground
         title = "Sleep Details"
 
+        // Scroll View
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Content View
+        let contentView = UIView()
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Stack View
         let stack = UIStackView()
         stack.axis = .vertical
         stack.spacing = 12
         stack.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(scrollView)
+        scrollView.addSubview(contentView)
+        contentView.addSubview(stack)
 
+        
         stack.addArrangedSubview(makeLabel(text: "Date: \(dateFormatter.string(from: entry.createdAt))", style: .body))
         stack.addArrangedSubview(makeLabel(text: "Sleep: \(entry.sleepQuality.label)", style: .title3))
         stack.addArrangedSubview(makeLabel(text: "Mood: \(entry.mood.label)", style: .title3))
@@ -46,11 +60,25 @@ final class SleepEntryDetailViewController: UIViewController {
 
         stack.addArrangedSubview(makeLabel(text: "Notes: \(entry.notes.isEmpty ? "None" : entry.notes)", style: .body))
 
-        view.addSubview(stack)
         NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            // ScrollView Constraints
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            // ContentView Constraints
+            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
+            
+            // StackView Constraint
+            stack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
+            stack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            stack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            stack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)
         ])
     }
 
