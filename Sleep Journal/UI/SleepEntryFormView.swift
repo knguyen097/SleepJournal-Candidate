@@ -86,27 +86,29 @@ struct SleepEntryFormView: View {
                 }
 
                 Section("Weather Context") {
+                    if let weatherError {
+                        Text(weatherError)
+                            .foregroundStyle(.red)
+                    }
+                    
                     if let weather {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(weather.summary)
                             Text("\(weather.temperatureF.map { "\($0)°F" } ?? "Unknown") • \(weather.wind ?? "No wind data")")
                                 .foregroundStyle(.secondary)
                         }
-                    } else if let weatherError {
-                        Text("Could not fetch weather: \(weatherError)")
-                            .foregroundStyle(.red)
-                    } else {
+                    } else if weatherError == nil {
                         Text("No weather attached yet.")
                             .foregroundStyle(.secondary)
                     }
-
+                    
                     Button {
                         Task {
                             await loadWeather()
                         }
                     } label: {
                         HStack {
-                            Text("Fetch Current Weather")
+                            Text(isLoadingWeather ? "Fetching Weather..." : "Fetch Current Weather")
                             if isLoadingWeather {
                                 Spacer()
                                 ProgressView()
@@ -195,8 +197,16 @@ struct SleepEntryFormView: View {
         weatherError = nil
         defer { isLoadingWeather = false }
 
-        let coordinate = await locationProvider.requestSingleLocation()
-            ?? CLLocationCoordinate2D(latitude: 39.7392, longitude: -104.9903)
+        guard let coordinate = await locationProvider.requestSingleLocation() else {
+            if let cachedWeather {
+                weather = cachedWeather
+                weatherError = "Location unavailable. Showing last saved weather."
+            } else {
+                weather = nil
+                weatherError = "Location unavailable. Please try again."
+            }
+            return
+        }
 
         do {
             let snapshot = try await weatherClient.fetchCurrentWeather(
@@ -206,8 +216,15 @@ struct SleepEntryFormView: View {
             weather = snapshot
             weatherCacheStore.save(snapshot)
             cachedWeather = snapshot
+            weatherError = nil
         } catch {
-            weatherError = "Weather unavailable. Please try again."
+            if let cachedWeather {
+                weather = cachedWeather
+                weatherError = "Unable to refresh weather. Showing last saved weather."
+            } else {
+                weather = nil
+                weatherError = "Weather unavailable. Please try again."
+            }
         }
     }
 }
