@@ -96,6 +96,7 @@ final class SleepListViewModel {
 
         if !normalizedQuery.isEmpty {
             let terms = normalizedQuery
+                .lowercased()
                 .split(whereSeparator: { $0.isWhitespace })
                 .map(String.init)
             

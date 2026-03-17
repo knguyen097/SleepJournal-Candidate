@@ -44,9 +44,7 @@ final class SleepEntryDetailViewController: UIViewController {
             stack.addArrangedSubview(makeLabel(text: "Weather: Not captured", style: .headline))
         }
 
-        if !entry.notes.isEmpty {
-            stack.addArrangedSubview(makeLabel(text: "Notes: \(entry.notes)", style: .body))
-        }
+        stack.addArrangedSubview(makeLabel(text: "Notes: \(entry.notes.isEmpty ? "None" : entry.notes)", style: .body))
 
         view.addSubview(stack)
         NSLayoutConstraint.activate([

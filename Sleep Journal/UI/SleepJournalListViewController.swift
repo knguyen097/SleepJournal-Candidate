@@ -126,7 +126,7 @@ final class SleepJournalListViewController: UITableViewController {
         guard let entry = viewModel.entry(at: indexPath) else {
             return
         }
-        navigationController!.pushViewController(SleepEntryDetailViewController(entry: entry), animated: true)
+        navigationController?.pushViewController(SleepEntryDetailViewController(entry: entry), animated: true)
     }
 
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
@@ -158,12 +158,12 @@ final class SleepJournalListViewController: UITableViewController {
     }
 
     @objc private func settingsTapped() {
-        navigationController!.pushViewController(SleepSettingsViewController(), animated: true)
+        navigationController?.pushViewController(SleepSettingsViewController(), animated: true)
     }
 
     @objc private func trendsTapped() {
         let trendsView = SleepTrendsView()
-        navigationController!.pushViewController(UIHostingController(rootView: trendsView), animated: true)
+        navigationController?.pushViewController(UIHostingController(rootView: trendsView), animated: true)
     }
 
     @objc private func refreshPulled() {
