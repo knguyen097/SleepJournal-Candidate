@@ -12,11 +12,46 @@ struct SleepTrendsView: View {
                         x: .value("Day", bucket.day, unit: .day),
                         y: .value("Hours", bucket.hours)
                     )
-                    .foregroundStyle(.indigo.gradient)
+                    .foregroundStyle(color(for: bucket.hours))
                 }
                 .frame(height: 220)
             }
+            
+            Section("Sleep Overview") {
+                HStack {
+                    Circle()
+                        .fill(Color.red)
+                        .frame(width: 10, height: 10)
 
+                    Text("Poor Sleep (< 6 hrs)")
+                    Spacer()
+                    Text("\(poorSleepDays)")
+                        .foregroundStyle(.secondary)
+                }
+
+                HStack {
+                    Circle()
+                        .fill(Color.yellow)
+                        .frame(width: 10, height: 10)
+
+                    Text("Okay Sleep (6–7 hrs)")
+                    Spacer()
+                    Text("\(okaySleepDays)")
+                        .foregroundStyle(.secondary)
+                }
+
+                HStack {
+                    Circle()
+                        .fill(Color.green)
+                        .frame(width: 10, height: 10)
+
+                    Text("Good Sleep (7+ hrs)")
+                    Spacer()
+                    Text("\(goodSleepDays)")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            
             Section("Mood Snapshot") {
                 ForEach(DailyMood.allCases) { mood in
                     let count = entries.filter { $0.mood == mood }.count
@@ -52,6 +87,28 @@ struct SleepTrendsView: View {
         .onAppear {
             loadEntries()
         }
+    }
+    
+    private func color(for hours: Double) -> Color {
+        if hours < 6 {
+            return .red
+        } else if hours < 7 {
+            return .yellow
+        } else {
+            return .green
+        }
+    }
+    
+    private var poorSleepDays: Int {
+        dayBuckets.filter { $0.hours < 6 }.count
+    }
+
+    private var okaySleepDays: Int {
+        dayBuckets.filter { $0.hours >= 6 && $0.hours < 7 }.count
+    }
+
+    private var goodSleepDays: Int {
+        dayBuckets.filter { $0.hours >= 7 }.count
     }
 
     private var dayBuckets: [SleepDayBucket] {
