@@ -21,7 +21,9 @@ final class JournalStore {
             return []
         }
 
-        let entries = try! decoder.decode([SleepEntry].self, from: data)
+        guard let entries = try? decoder.decode([SleepEntry].self, from: data) else { // Fixed for safe decoding in case of data corruption
+            return []
+        }
 
         return entries.sorted(by: { $0.createdAt > $1.createdAt })
     }
