@@ -89,9 +89,22 @@ final class SleepListViewModel {
 
     private func applyFilters() {
         var result = allEntries
+        
+        let normalizedQuery = searchText
+            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if !searchText.isEmpty {
-            result = result.filter { $0.searchBlob.contains(searchText) }
+        if !normalizedQuery.isEmpty {
+            let terms = normalizedQuery
+                .split(whereSeparator: { $0.isWhitespace })
+                .map(String.init)
+            
+            result = result.filter { entry in
+                let searchable = entry.searchBlob
+                return terms.allSatisfy { term in
+                    searchable.contains(term)
+                }
+            }
         }
 
         if !selectedTags.isEmpty {

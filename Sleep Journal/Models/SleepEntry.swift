@@ -11,8 +11,24 @@ struct SleepEntry: Codable, Identifiable, Equatable {
     var weather: WeatherSnapshot?
 
     var searchBlob: String {
-        let tagsText = tags.map(\.label).joined(separator: " ")
-        return "\(sleepQuality.label) \(mood.label) \(tagsText) \(notes)".lowercased()
+        let qualityTokens = [
+            sleepQuality.rawValue,
+            sleepQuality.label
+        ]
+        
+        let moodTokens = [
+            mood.rawValue,
+            mood.label
+        ]
+        
+        let tagTokens = tags.flatMap { tag in
+            [tag.rawValue, tag.label, tag.emoji]
+        }
+        
+        return (qualityTokens + moodTokens + tagTokens + [notes])
+            .joined(separator: " ")
+            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 

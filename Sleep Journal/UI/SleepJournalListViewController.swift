@@ -10,13 +10,17 @@ final class SleepJournalListViewController: UITableViewController {
         formatter.timeStyle = .short
         return formatter
     }()
-
+    
     private lazy var searchController: UISearchController = {
         let controller = UISearchController(searchResultsController: nil)
         controller.obscuresBackgroundDuringPresentation = false
         controller.searchResultsUpdater = self
         controller.searchBar.delegate = self
-        controller.searchBar.placeholder = "Search notes or vibe"
+        controller.searchBar.placeholder = "Search notes, quality, mood, or tags"
+        controller.searchBar.autocapitalizationType = .none
+        controller.searchBar.autocorrectionType = .no
+        controller.searchBar.smartQuotesType = .no
+        controller.searchBar.smartDashesType = .no
         return controller
     }()
 
