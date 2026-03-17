@@ -15,6 +15,10 @@ struct SleepEntryFormView: View {
     @State private var selectedTags: Set<SleepTag> = []
     @State private var notes: String = ""
 
+    private var wordCount : Int {
+        notes.split { $0.isWhitespace || $0.isNewline }.count
+    }
+    
     @State private var weather: WeatherSnapshot?
     @State private var cachedWeather: WeatherSnapshot?
     @State private var isLoadingWeather = false
@@ -28,7 +32,7 @@ struct SleepEntryFormView: View {
     private let locationProvider = DeviceLocationProvider()
     private let weatherClient = WeatherClient()
     private let weatherCacheStore = WeatherCacheStore.shared
-
+    
     var body: some View {
         Form {
             Section("Flow") {
@@ -89,6 +93,17 @@ struct SleepEntryFormView: View {
                 Section("Notes") {
                     TextEditor(text: $notes)
                         .frame(minHeight: 120)
+                        .onChange(of: notes) {
+                            let words = notes.split { $0.isWhitespace || $0.isNewline }
+
+                            if words.count > 200 {
+                                notes = words.prefix(200).joined(separator: " ")
+                            }
+                        }
+
+                    Text("\(wordCount)/200 words")
+                        .font(.caption)
+                        .foregroundStyle(wordCount >= 200 ? .red : .secondary)
                 }
                 
                 Section("Location") {
@@ -239,46 +254,51 @@ struct SleepEntryFormView: View {
             return
         }
 
+        let fallback = EntryLocation(
+            name: "Unknown Location",
+            latitude: coordinate.latitude,
+            longitude: coordinate.longitude
+        )
+
         let location = CLLocation(
             latitude: coordinate.latitude,
             longitude: coordinate.longitude
         )
 
-        if let request = MKReverseGeocodingRequest(location: location) {
-            do {
-                let mapItems = try await request.mapItems
+        guard let request = MKReverseGeocodingRequest(location: location) else {
+            entryLocation = fallback
+            return
+        }
 
-                if let item = mapItems.first {
-                    let name =
-                        item.address?.shortAddress ??
-                        item.address?.fullAddress ??
-                        "Unknown Location"
+        do {
+            let mapItems = try await request.mapItems
 
-                    entryLocation = EntryLocation(
-                        name: name,
-                        latitude: coordinate.latitude,
-                        longitude: coordinate.longitude
-                    )
-                } else {
-                    entryLocation = EntryLocation(
-                        name: "Unknown Location",
-                        latitude: coordinate.latitude,
-                        longitude: coordinate.longitude
-                    )
-                }
-            } catch {
-                entryLocation = EntryLocation(
-                    name: "Unknown Location",
-                    latitude: coordinate.latitude,
-                    longitude: coordinate.longitude
-                )
+            guard let item = mapItems.first else {
+                entryLocation = fallback
+                return
             }
-        } else {
+
+            let name =
+                item.addressRepresentations?.cityWithContext(.automatic) ??
+                {
+                    if let city = item.addressRepresentations?.cityName,
+                       let region = item.addressRepresentations?.regionName {
+                        return "\(city), \(region)"
+                    } else if let city = item.addressRepresentations?.cityName {
+                        return city
+                    } else {
+                        return "Unknown Location"
+                    }
+                }()
+
             entryLocation = EntryLocation(
-                name: "Unknown Location",
+                name: name,
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude
             )
+
+        } catch {
+            entryLocation = fallback
         }
     }
 

@@ -43,28 +43,29 @@ final class SleepEntryDetailViewController: UIViewController {
         contentView.addSubview(stack)
 
         
-        stack.addArrangedSubview(makeLabel(text: "Date: \(dateFormatter.string(from: entry.createdAt))", style: .body))
-        stack.addArrangedSubview(makeLabel(text: "Sleep: \(entry.sleepQuality.label)", style: .title3))
-        stack.addArrangedSubview(makeLabel(text: "Mood: \(entry.mood.label)", style: .title3))
-        stack.addArrangedSubview(makeLabel(text: "Hours: \(entry.sleepHours.formatted())", style: .title3))
+        stack.addArrangedSubview(makeDetailLabel(title: "Date", value: dateFormatter.string(from: entry.createdAt), style: .body))
+        stack.addArrangedSubview(makeDetailLabel(title: "Sleep", value: entry.sleepQuality.label, style: .body))
+        stack.addArrangedSubview(makeDetailLabel(title: "Mood", value: entry.mood.label, style: .body))
+        stack.addArrangedSubview(makeDetailLabel(title: "Hours", value: entry.sleepHours.formatted(), style: .body))
+        
         let tagsText = entry.tags.isEmpty ? "No tags" : entry.tags.map { "\($0.emoji) \($0.label)" }.joined(separator: ", ")
-        stack.addArrangedSubview(makeLabel(text: "Tags: \(tagsText)", style: .body))
+        stack.addArrangedSubview(makeDetailLabel(title: "Tags", value: tagsText, style: .body))
 
         if let location = entry.location {
-            stack.addArrangedSubview(makeLabel(text: "Location: \(location.name)", style: .body))
+            stack.addArrangedSubview(makeDetailLabel(title: "Location", value: location.name, style: .body))
         } else {
-            stack.addArrangedSubview(makeLabel(text: "Location: None", style: .body))
-        }
-        
-        if let weather = entry.weather {
-            stack.addArrangedSubview(makeLabel(text: "Weather: \(weather.summary)", style: .headline))
-            stack.addArrangedSubview(makeLabel(text: "Temperature: \(weather.temperatureF.map { "\($0)°F" } ?? "Unknown")", style: .body))
-            stack.addArrangedSubview(makeLabel(text: "Wind: \(weather.wind ?? "Unknown")", style: .body))
-        } else {
-            stack.addArrangedSubview(makeLabel(text: "Weather: Not captured", style: .headline))
+            stack.addArrangedSubview(makeDetailLabel(title: "Location", value: "None", style: .body))
         }
 
-        stack.addArrangedSubview(makeLabel(text: "Notes: \(entry.notes.isEmpty ? "None" : entry.notes)", style: .body))
+        if let weather = entry.weather {
+            stack.addArrangedSubview(makeDetailLabel(title: "Weather", value: weather.summary, style: .body))
+            stack.addArrangedSubview(makeDetailLabel(title: "Temperature", value: weather.temperatureF.map { "\($0)°F" } ?? "Unknown", style: .body))
+            stack.addArrangedSubview(makeDetailLabel(title: "Wind", value: weather.wind ?? "Unknown", style: .body))
+        } else {
+            stack.addArrangedSubview(makeDetailLabel(title: "Weather", value: "Not captured", style: .body))
+        }
+
+        stack.addArrangedSubview(makeDetailLabel(title: "Notes", value: entry.notes.isEmpty ? "None" : entry.notes, style: .body))
 
         NSLayoutConstraint.activate([
             // ScrollView Constraints
@@ -88,11 +89,32 @@ final class SleepEntryDetailViewController: UIViewController {
         ])
     }
 
-    private func makeLabel(text: String, style: UIFont.TextStyle) -> UILabel {
+    private func makeDetailLabel(title: String, value: String, style: UIFont.TextStyle) -> UILabel {
         let label = UILabel()
         label.numberOfLines = 0
-        label.font = .preferredFont(forTextStyle: style)
-        label.text = text
+
+        let baseFont = UIFont.preferredFont(forTextStyle: style)
+        let titleFont = UIFont.systemFont(ofSize: baseFont.pointSize, weight: .semibold)
+
+        let attributed = NSMutableAttributedString(
+            string: "\(title): ",
+            attributes: [
+                .font: titleFont,
+                .foregroundColor: UIColor.label
+            ]
+        )
+
+        attributed.append(
+            NSAttributedString(
+                string: value,
+                attributes: [
+                    .font: baseFont,
+                    .foregroundColor: UIColor.label
+                ]
+            )
+        )
+
+        label.attributedText = attributed
         return label
     }
 }

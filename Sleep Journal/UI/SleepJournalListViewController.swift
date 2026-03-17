@@ -108,14 +108,16 @@ final class SleepJournalListViewController: UITableViewController {
         let moodLine = "Mood: \(entry.mood.emoji) • \(entry.sleepHours.formatted())h • \(tagsText)"
 
         let dateText = dateFormatter.string(from: entry.createdAt)
+        let locationText = entry.location?.name ?? "No location attached"
+        
         if let weather = entry.weather {
-            config.secondaryText = "\(moodLine)\n\(dateText) • \(weather.summary) \(weather.temperatureF.map { "\($0)°F" } ?? "")"
+            config.secondaryText = "\(moodLine)\n\(locationText)\n\(dateText) • \(weather.summary) \(weather.temperatureF.map { "\($0)°F" } ?? "")"
         } else {
-            config.secondaryText = "\(moodLine)\n\(dateText) • No weather attached"
+            config.secondaryText = "\(moodLine)\n\(locationText)\n\(dateText) • No weather attached"
         }
 
         config.secondaryTextProperties.color = .secondaryLabel
-        config.secondaryTextProperties.numberOfLines = 2
+        config.secondaryTextProperties.numberOfLines = 3
 
         cell.contentConfiguration = config
         cell.accessoryType = .disclosureIndicator
