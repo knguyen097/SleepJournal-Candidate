@@ -1,6 +1,7 @@
 import CoreLocation
 import SwiftUI
 import MapKit
+import PhotosUI
 
 struct SleepEntryFormView: View {
     let onSave: (SleepEntry) -> Void
@@ -28,6 +29,10 @@ struct SleepEntryFormView: View {
     @State private var entryLocation: EntryLocation?
     @State private var locationError: String?
     @State private var isLoadingLocation = false
+    
+    @State private var selectedPickerItem: PhotosPickerItem?
+    @State private var imageData: Data?
+    @State private var imageError: String?
 
     private let locationProvider = DeviceLocationProvider()
     private let weatherClient = WeatherClient()
@@ -104,6 +109,48 @@ struct SleepEntryFormView: View {
                     Text("\(wordCount)/200 words")
                         .font(.caption)
                         .foregroundStyle(wordCount >= 200 ? .red : .secondary)
+                }
+                
+                Section("Mood Photo") {
+                    PhotosPicker("Choose a Photo", selection: $selectedPickerItem, matching: .images)
+                        .onChange(of: selectedPickerItem) { _,newItem in
+                            guard let newItem else { return }
+                            
+                            Task {
+                                do {
+                                    if let data = try await newItem.loadTransferable(type: Data.self) {
+                                        await MainActor.run {
+                                            imageData = data
+                                            imageError = nil
+                                        }
+                                    }
+                                } catch {
+                                    await MainActor.run {
+                                        imageError = "Failed to load image from library."
+                                    }
+                                }
+                            }
+                        }
+                    if let imageData, let uiImage = UIImage(data: imageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxHeight: 220)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    
+                    if let imageError {
+                        Text(imageError)
+                            .foregroundStyle(.red)
+                    }
+                    
+                    if imageData != nil {
+                        Button("Remove Photo", role: .destructive) {
+                            imageData = nil
+                            selectedPickerItem = nil
+                            imageError = nil
+                        }
+                    }
                 }
                 
                 Section("Location") {
@@ -238,7 +285,8 @@ struct SleepEntryFormView: View {
             tags: sortedTags,
             notes: notes,
             weather: weather,
-            location: attachLocation ? entryLocation : nil
+            location: attachLocation ? entryLocation : nil,
+            photoData: imageData
         )
         onSave(entry)
     }

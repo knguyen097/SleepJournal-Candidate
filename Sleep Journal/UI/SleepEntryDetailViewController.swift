@@ -42,7 +42,17 @@ final class SleepEntryDetailViewController: UIViewController {
         scrollView.addSubview(contentView)
         contentView.addSubview(stack)
 
-        
+        if let photoData = entry.photoData, let image = UIImage(data: photoData) {
+            let imageView = UIImageView(image: image)
+            imageView.contentMode = .scaleAspectFit
+            imageView.clipsToBounds = true
+            imageView.layer.cornerRadius = 12
+            imageView.translatesAutoresizingMaskIntoConstraints = false
+            
+            stack.addArrangedSubview(imageView)
+            imageView.heightAnchor.constraint(equalToConstant: 220).isActive = true
+        }
+
         stack.addArrangedSubview(makeDetailLabel(title: "Date", value: dateFormatter.string(from: entry.createdAt), style: .body))
         stack.addArrangedSubview(makeDetailLabel(title: "Sleep", value: entry.sleepQuality.label, style: .body))
         stack.addArrangedSubview(makeDetailLabel(title: "Mood", value: entry.mood.label, style: .body))

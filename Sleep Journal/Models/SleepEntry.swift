@@ -10,6 +10,7 @@ struct SleepEntry: Codable, Identifiable, Equatable {
     var notes: String
     var weather: WeatherSnapshot?
     var location: EntryLocation?
+    var photoData: Data?
 
     var searchBlob: String {
         let qualityTokens = [
