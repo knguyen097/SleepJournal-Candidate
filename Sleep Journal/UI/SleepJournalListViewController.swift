@@ -1,3 +1,9 @@
+// Main journal timeline screen for browsing saved sleep entries.
+//
+// Supports:
+// - search across notes, mood, quality, and tags
+// - tag-based filtering
+// - navigation to add, detail, trends, and settings screens
 import SwiftUI
 import UIKit
 
@@ -11,6 +17,7 @@ final class SleepJournalListViewController: UITableViewController {
         return formatter
     }()
     
+    // Search controller used to filter entries across notes, mood, quality, and selected tags
     private lazy var searchController: UISearchController = {
         let controller = UISearchController(searchResultsController: nil)
         controller.obscuresBackgroundDuringPresentation = false
@@ -24,6 +31,7 @@ final class SleepJournalListViewController: UITableViewController {
         return controller
     }()
 
+    // View Setup: configures navigation, search, filter header, table behavior, and loags inital set of journal entries
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Journal Timeline"
@@ -64,6 +72,7 @@ final class SleepJournalListViewController: UITableViewController {
         viewModel.loadEntries()
     }
 
+    // Recalculates the table header height after layout so the tags filter sizes correctly
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         guard let header = tableView.tableHeaderView else {
@@ -94,6 +103,7 @@ final class SleepJournalListViewController: UITableViewController {
         viewModel.titleForSection(section)
     }
 
+    // Builds a compact summary for each entry using inputted data
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "EntryCell", for: indexPath)
         guard let entry = viewModel.entry(at: indexPath) else {
@@ -123,6 +133,7 @@ final class SleepJournalListViewController: UITableViewController {
         cell.accessoryType = .disclosureIndicator
         return cell
     }
+    
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         guard let entry = viewModel.entry(at: indexPath) else {
@@ -139,6 +150,7 @@ final class SleepJournalListViewController: UITableViewController {
         tableView.reloadData()
     }
 
+    // Presents the SwiftUI Sleep entry form so that the form can flow inside the existing view controller
     @objc private func addEntryTapped() {
         var presentedNavController: UINavigationController?
         
@@ -162,7 +174,8 @@ final class SleepJournalListViewController: UITableViewController {
     @objc private func settingsTapped() {
         navigationController?.pushViewController(SleepSettingsViewController(), animated: true)
     }
-
+    
+    // Pushes the trends screen from from this view controller
     @objc private func trendsTapped() {
         let trendsView = SleepTrendsView()
         navigationController?.pushViewController(UIHostingController(rootView: trendsView), animated: true)
@@ -174,6 +187,7 @@ final class SleepJournalListViewController: UITableViewController {
         refreshControl?.endRefreshing()
     }
 
+    // Toggles a tag filter button, updates the filter state, and refreshes the list to reflect the selected tags
     @objc private func tagButtonTapped(_ sender: UIButton) {
         guard let tag = SleepTag.allCases.first(where: { $0.rawValue == sender.accessibilityIdentifier }) else {
             return
@@ -183,7 +197,8 @@ final class SleepJournalListViewController: UITableViewController {
         viewModel.setTagEnabled(tag, enabled: sender.isSelected)
         tableView.reloadData()
     }
-
+    
+    // Creates a horizontally scrollable filter header for each available SleepTag
     private func makeFilterHeaderView() -> UIView {
         let container = UIView()
         container.backgroundColor = .clear
@@ -239,6 +254,7 @@ final class SleepJournalListViewController: UITableViewController {
         return container
     }
 
+    // Applies selected/unselected visual styling so active tag filters are clearly recognizable in the header
     private func applyTagButtonStyle(_ button: UIButton) {
         var config = button.configuration ?? .bordered()
         config.baseBackgroundColor = button.isSelected ? .systemIndigo.withAlphaComponent(0.2) : .clear
@@ -247,6 +263,7 @@ final class SleepJournalListViewController: UITableViewController {
     }
 }
 
+// Search Handling
 extension SleepJournalListViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         viewModel.searchText = searchController.searchBar.text ?? ""

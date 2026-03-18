@@ -1,3 +1,9 @@
+/// Multi-step form for creating a sleep journal entry.
+///
+/// This view collects both:
+/// - core sleep data (hours slept, sleep quality, mood)
+/// - optional contextual details (tags, notes, photo, location, weather)
+
 import CoreLocation
 import SwiftUI
 import MapKit
@@ -8,28 +14,35 @@ struct SleepEntryFormView: View {
     let onCancel: () -> Void
 
     @Environment(\.dismiss) private var dismiss
-
+    
+    /// Form State
     @State private var currentStep = 0
+    
+    /// Entry Input State
     @State private var sleepHours: Double = 7.0
     @State private var sleepQuality: SleepQuality = .okay
     @State private var mood: DailyMood = .neutral
     @State private var selectedTags: Set<SleepTag> = []
     @State private var notes: String = ""
 
+    /// Computes the live word count shown beneath the notes field
     private var wordCount : Int {
         notes.split { $0.isWhitespace || $0.isNewline }.count
     }
     
+    /// Weather State
     @State private var weather: WeatherSnapshot?
     @State private var cachedWeather: WeatherSnapshot?
     @State private var isLoadingWeather = false
     @State private var weatherError: String?
     
+    /// Location State
     @State private var attachLocation = false
     @State private var entryLocation: EntryLocation?
     @State private var locationError: String?
     @State private var isLoadingLocation = false
     
+    /// Photo State
     @State private var selectedPickerItem: PhotosPickerItem?
     @State private var imageData: Data?
     @State private var imageError: String?
@@ -38,6 +51,8 @@ struct SleepEntryFormView: View {
     private let weatherClient = WeatherClient()
     private let weatherCacheStore = WeatherCacheStore.shared
     
+    /// View Layout
+    /// Renders the multi-step entry form and conditionally shows fields based on the currently selected step
     var body: some View {
         Form {
             Section("Flow") {
@@ -94,7 +109,8 @@ struct SleepEntryFormView: View {
                         }
                     }
                 }
-
+                
+                /// Notes are limited to 200 words to keep entries concise and preserve readability throughout the app
                 Section("Notes") {
                     TextEditor(text: $notes)
                         .frame(minHeight: 120)
@@ -111,11 +127,13 @@ struct SleepEntryFormView: View {
                         .foregroundStyle(wordCount >= 200 ? .red : .secondary)
                 }
                 
+                /// Allows the user to attach an optional photo
                 Section("Mood Photo") {
                     PhotosPicker("Choose a Photo", selection: $selectedPickerItem, matching: .images)
                         .onChange(of: selectedPickerItem) { _,newItem in
                             guard let newItem else { return }
                             
+                            /// Load the selected photo asynchronously because it can come from either local storage or iCloud photo library
                             Task {
                                 do {
                                     if let data = try await newItem.loadTransferable(type: Data.self) {
@@ -153,6 +171,7 @@ struct SleepEntryFormView: View {
                     }
                 }
                 
+                /// Location is optional and can be attached to give additional information for the user
                 Section("Location") {
                     Toggle("Attach Current Location", isOn: $attachLocation)
                         .onChange(of: attachLocation) { _, isOn in
@@ -183,6 +202,7 @@ struct SleepEntryFormView: View {
                     }
                 }
 
+                /// Weather adds optional environmental context and supports fallback to cached data when live fetching is unavailable
                 Section("Weather Context") {
                     if let weatherError {
                         Text(weatherError)
@@ -291,6 +311,7 @@ struct SleepEntryFormView: View {
         onSave(entry)
     }
     
+    /// Requests the current device's location and converts it into readable text for the jounral entry when possible
     private func loadEntryLocation() async {
         isLoadingLocation = true
         locationError = nil
@@ -350,6 +371,7 @@ struct SleepEntryFormView: View {
         }
     }
 
+    /// Fetches current weather for the user's location and falls back to cached weather when live data is unavailable
     private func loadWeather() async {
         isLoadingWeather = true
         weatherError = nil
