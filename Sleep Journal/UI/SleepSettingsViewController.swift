@@ -1,6 +1,12 @@
+// Settings screen providing utility actions for managing journal data.
+//
+// Includes:
+// - exporting entries as JSON for sharing or inspection
+// - resetting stored data back to default seed entries
 import UIKit
 
 final class SleepSettingsViewController: UITableViewController {
+    // Represents avaialble actions in the settings screen
     private enum SettingsAction: Int, CaseIterable {
         case exportJSON
         case resetData
@@ -62,6 +68,7 @@ final class SleepSettingsViewController: UITableViewController {
         }
     }
 
+    // Expots all jounrnal entries as a JSON file and presents a share sheet
     private func exportJSON() {
         guard let data = JournalStore.shared.exportEntriesData() else {
             presentAlert(title: "Export failed", message: "Could not prepare journal data.")
@@ -79,12 +86,14 @@ final class SleepSettingsViewController: UITableViewController {
         }
     }
 
+    // Clears all stored entries and reloads default seed data
     private func resetData() {
         JournalStore.shared.clearAllEntries()
         _ = JournalStore.shared.loadEntries()
         presentAlert(title: "Data reset", message: "Seed entries were restored.")
     }
 
+    // Helper method to display alert messages
     private func presentAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))

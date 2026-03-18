@@ -1,9 +1,14 @@
+// Trends dashboard for summarizing recent sleep patterns.
+//
+// Displays a 7-day sleep chart, sleep threshold summary,
+// mood counts, and recent journal notes.
 import Charts
 import SwiftUI
 
 struct SleepTrendsView: View {
     @State private var entries: [SleepEntry] = []
 
+    // View Layout: presents trend summaries derived from saved journal entries
     var body: some View {
         List {
             Section("7-Day Sleep Hours") {
@@ -17,6 +22,7 @@ struct SleepTrendsView: View {
                 .frame(height: 220)
             }
             
+            // Summarizes the most recent days into buckets that match the chart's color coding
             Section("Sleep Overview") {
                 HStack {
                     Circle()
@@ -89,6 +95,7 @@ struct SleepTrendsView: View {
         }
     }
     
+    // Maps sleep duration to chart colors: red for < 6 hours, yellow for 6-7 hours, and green for 7+ hours
     private func color(for hours: Double) -> Color {
         if hours < 6 {
             return .red
@@ -110,7 +117,8 @@ struct SleepTrendsView: View {
     private var goodSleepDays: Int {
         dayBuckets.filter { $0.hours >= 7 }.count
     }
-
+    
+    // Groups entries by calendar day and shows one bar per day instead of one bar per entry
     private var dayBuckets: [SleepDayBucket] {
         let calendar = Calendar.current
         let grouped = Dictionary(grouping: entries) { calendar.startOfDay(for: $0.createdAt) }
